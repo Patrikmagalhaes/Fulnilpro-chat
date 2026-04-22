@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funil WhatsApp — Anderson Nunes Personal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 20px;
+  }
+
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .page-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .phone {
+    width: 375px;
+    height: 720px;
+    background: #ECE5DD;
+    border-radius: 40px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow:
+      0 0 0 2px #2a2a3e,
+      0 0 0 8px #111,
+      0 40px 80px rgba(0,0,0,0.7),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  /* Status bar */
+  .status-bar {
+    background: #075E54;
+    padding: 8px 20px 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .status-time { color: #fff; font-size: 12px; font-weight: 600; }
+  .status-icons { color: #fff; font-size: 10px; }
+
+  /* WA Header */
+  .wa-header {
+    background: #075E54;
+    padding: 8px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .back-btn { color: #fff; font-size: 20px; cursor: pointer; opacity: 0.9; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .contact-info { flex: 1; }
+  .contact-name { color: #fff; font-size: 16px; font-weight: 600; line-height: 1.2; }
+  .contact-status { color: rgba(255,255,255,0.75); font-size: 11.5px; }
+  .header-icons { color: rgba(255,255,255,0.85); font-size: 18px; display: flex; gap: 16px; }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: #ECE5DD url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c4b4a0' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    scroll-behavior: smooth;
+  }
+  .chat-area::-webkit-scrollbar { width: 3px; }
+  .chat-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 2px; }
+
+  /* Date chip */
+  .date-chip {
+    align-self: center;
+    background: rgba(255,255,255,0.85);
+    color: #5f6368;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin: 6px 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+
+  /* Bubbles */
+  .bubble-row {
+    display: flex;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .bubble-row.visible { opacity: 1; transform: translateY(0); }
+  .bubble-row.from-them { justify-content: flex-start; }
+  .bubble-row.from-me { justify-content: flex-end; }
+
+  .bubble {
+    max-width: 78%;
+    padding: 7px 10px 5px;
+    border-radius: 8px;
+    position: relative;
+    word-wrap: break-word;
+    line-height: 1.45;
+    font-size: 14.5px;
+  }
+  .bubble.them {
+    background: #fff;
+    border-top-left-radius: 2px;
+    color: #111;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+  }
+  .bubble.me {
+    background: #DCF8C6;
+    border-top-right-radius: 2px;
+    color: #111;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+  }
+
+  .bubble .meta {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+  }
+  .bubble .time { font-size: 10.5px; color: #92A58C; }
+  .bubble .tick { font-size: 12px; color: #53BDEB; }
+
+  .bubble b, .bubble strong { font-weight: 600; }
+
+  /* Tail for bubbles */
+  .bubble.them::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -7px;
+    width: 0; height: 0;
+    border-top: 7px solid #fff;
+    border-left: 7px solid transparent;
+  }
+  .bubble.me::after {
+    content: '';
+    position: absolute;
+    top: 0; right: -7px;
+    width: 0; height: 0;
+    border-top: 7px solid #DCF8C6;
+    border-right: 7px solid transparent;
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    background: #fff;
+    border-radius: 8px;
+    border-top-left-radius: 2px;
+    width: fit-content;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    opacity: 0;
+    transition: opacity 0.2s;
+    position: relative;
+  }
+  .typing-indicator::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -7px;
+    width: 0; height: 0;
+    border-top: 7px solid #fff;
+    border-left: 7px solid transparent;
+  }
+  .typing-indicator.show { opacity: 1; }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #90959a;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  /* Choices area */
+  .choices-area {
+    background: rgba(255,255,255,0.95);
+    border-top: 1px solid #ddd;
+    padding: 10px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex-shrink: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    transition: opacity 0.3s;
+  }
+  .choices-label {
+    font-size: 11px;
+    color: #888;
+    text-align: center;
+    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+  }
+  .choice-btn {
+    background: #fff;
+    border: 1.5px solid #25D366;
+    color: #075E54;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 14px;
+    border-radius: 22px;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s, transform 0.1s, opacity 0.15s;
+    line-height: 1.3;
+    font-family: inherit;
+  }
+  .choice-btn:hover { background: #e8f9f0; transform: scale(1.01); }
+  .choice-btn:active { transform: scale(0.98); background: #d4f5e2; }
+  .choice-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+  .cta-box {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .cta-box p { color: #fff; font-size: 13px; margin-bottom: 10px; line-height: 1.5; }
+  .cta-btn {
+    display: inline-block;
+    background: #fff;
+    color: #075E54;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.1s;
+  }
+  .cta-btn:hover { transform: scale(1.03); }
+
+  .restart-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.7);
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .restart-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+  <p class="page-label">Funil de Qualificação — Anderson Nunes Personal</p>
+
+  <div class="phone">
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span class="status-time" id="clock">9:41</span>
+      <span class="status-icons">●●● WiFi ▮▮▮</span>
+    </div>
+
+    <!-- WA Header -->
+    <div class="wa-header">
+      <span class="back-btn">‹</span>
+      <div class="avatar">AN</div>
+      <div class="contact-info">
+        <div class="contact-name">Anderson Nunes</div>
+        <div class="contact-status" id="header-status">Personal Trainer 💪</div>
+      </div>
+      <div class="header-icons">
+        <span>📞</span>
+        <span>⋮</span>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-area" id="chat">
+      <div class="date-chip" id="date-chip">Hoje</div>
+      <div class="bubble-row from-them" id="typing-row" style="display:none;">
+        <div class="typing-indicator" id="typing">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Choices -->
+    <div class="choices-area" id="choices-area">
+      <p class="choices-label">Selecione uma opção</p>
+    </div>
+  </div>
+
+  <button class="restart-btn" onclick="restartFlow()">↺ Reiniciar conversa</button>
+</div>
+
+<script>
+const ANDERSON_PHONE = "5500000000000"; // ALTERE AQUI
+
+function getTime() {
+  const now = new Date();
+  return now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}
+
+// ============================================================
+// FLUXO COMPLETO
+// ============================================================
+const FLOW = {
+
+  intro: {
+    messages: [
+      "Ei! 👋 Aqui é o *Anderson Nunes*, personal trainer.",
+      "Antes de qualquer coisa, vou te fazer algumas perguntas rápidas — menos de 1 minuto — pra entender o que você *realmente* precisa.\n\nAssim consigo montar um direcionamento 100% no seu perfil. Pode ser? 👇"
+    ],
+    choices: [
+      { label: "✅  Bora lá!", ack: null, next: "goal" },
+      { label: "⏳  Agora não", ack: null, next: "not_now" }
+    ]
+  },
+
+  not_now: {
+    messages: [
+      "Tudo bem, sem pressão! 😊",
+      "Quando você estiver pronto é só chamar — fico no aguardo. Qualquer coisa, me chama no WhatsApp. 🙌"
+    ],
+    choices: [],
+    isEnd: true
+  },
+
+  goal: {
+    intro: "Show! 🙌 Vamos lá.",
+    messages: [
+      "Qual é o seu *principal objetivo* hoje? 👇"
+    ],
+    choices: [
+      {
+        label: "🔥  Emagrecer",
+        ack: "Emagrecer com método — sem perder músculo e sem radicalismo. Excelente escolha. ✅",
+        next: "level"
+      },
+      {
+        label: "💪  Ganhar massa muscular",
+        ack: "Ganhar massa de verdade, com inteligência e progressão. Esse é o caminho. ✅",
+        next: "level"
+      },
+      {
+        label: "⚡  Melhorar condicionamento",
+        ack: "Condicionamento físico muda tudo — você rende mais em tudo na vida. Ótimo foco. ✅",
+        next: "level"
+      },
+      {
+        label: "🧘  Saúde e qualidade de vida",
+        ack: "Cuidar da saúde com consistência é o maior investimento que você pode fazer. Parabéns pela clareza. ✅",
+        next: "level"
+      }
+    ]
+  },
+
+  level: {
+    messages: [
+      "Agora me conta: como você se considera hoje? 👇"
+    ],
+    choices: [
+      {
+        label: "🟢  Iniciante — tô começando agora",
+        ack: "Começar do jeito certo é metade do resultado. Muita gente erra justamente aqui — e você não vai errar.",
+        next: "blocker"
+      },
+      {
+        label: "🟡  Intermediário — já treinei antes",
+        ack: "Você já tem base. Agora é uma questão de ajustar o que está travando o seu progresso.",
+        next: "blocker"
+      },
+      {
+        label: "🔴  Avançado — treino há anos",
+        ack: "Com quem já tem experiência a conversa muda de nível — é sobre otimização e resultado real.",
+        next: "blocker"
+      }
+    ]
+  },
+
+  blocker: {
+    messages: [
+      "Entendido 👊\n\nE qual dessas situações mais te *trava* hoje?"
+    ],
+    choices: [
+      {
+        label: "😕  Não sei o que fazer na academia",
+        ack: "Esse é o motivo número 1 que faz as pessoas girarem em círculos por anos. Vamos resolver isso de uma vez.",
+        next: "days"
+      },
+      {
+        label: "😴  Falta de motivação / disciplina",
+        ack: "Motivação vai e volta — o que funciona de verdade é ter um *sistema*. E é exatamente isso que eu te dou.",
+        next: "days"
+      },
+      {
+        label: "⏱  Falta de tempo na rotina",
+        ack: "Quem disse que você precisa de 2 horas? Com o método certo, 45 minutos bem feitos resolvem.",
+        next: "days"
+      },
+      {
+        label: "❌  Já tentei e não tive resultado",
+        ack: "Se você tentou e não funcionou, o problema não é você — é o *método*. Vamos mudar isso.",
+        next: "days"
+      }
+    ]
+  },
+
+  days: {
+    messages: [
+      "Quantos dias por semana você consegue treinar?"
+    ],
+    choices: [
+      {
+        label: "2x por semana",
+        ack: "Dois dias é suficiente pra resultados consistentes — com a estratégia certa. ✅",
+        next: "pitch"
+      },
+      {
+        label: "3x por semana",
+        ack: "Três dias é o ponto ideal pra maioria das pessoas. Dá pra transformar muito com isso. ✅",
+        next: "pitch"
+      },
+      {
+        label: "4x ou mais",
+        ack: "Quatro dias ou mais — você está comprometido. Vamos aproveitar cada treino ao máximo. ✅",
+        next: "pitch"
+      },
+      {
+        label: "Ainda não sei",
+        ack: "Sem problema. A gente descobre juntos o que encaixa melhor na sua rotina. ✅",
+        next: "pitch"
+      }
+    ]
+  },
+
+  pitch: {
+    messages: [
+      "Perfeito. Com base no que você me respondeu, já dá pra montar um direcionamento inicial pra você. Olha só 👇",
+      "Pelo seu perfil, o melhor caminho pra você agora é:\n\n✔ Treino ajustado ao seu nível e objetivo\n✔ Progressão inteligente — sem excesso e sem estagnação\n✔ Foco em *consistência* — isso é o que separa quem vê resultado de quem não vê",
+      "A maioria das pessoas erra justamente nisso.\n\nNão é falta de esforço. É falta de *direção*.\n\nE é exatamente isso que eu resolvo com os meus alunos, todos os dias.",
+      "Se fizer sentido pra você, posso te montar um plano inicial e você ainda faz uma *aula experimental* pra sentir na prática como funciona.\n\nQuer que eu monte isso pra você? 👇"
+    ],
+    choices: [
+      {
+        label: "👉  Quero sim!",
+        ack: "Que ótimo! 🔥 Vou te passar o contato agora.",
+        next: "cta_yes"
+      },
+      {
+        label: "🤔  Tenho uma dúvida antes",
+        ack: "Claro! É super importante você entender tudo antes de decidir qualquer coisa.",
+        next: "cta_doubt"
+      }
+    ]
+  },
+
+  cta_yes: {
+    messages: [
+      "Me chama aqui no WhatsApp — te explico como funciona e já te encaixo no próximo horário disponível. 👇"
+    ],
+    choices: [],
+    isEnd: true,
+    cta: {
+      text: "Falar com Anderson agora 🚀",
+      phone: ANDERSON_PHONE
+    }
+  },
+
+  cta_doubt: {
+    messages: [
+      "Pode mandar a dúvida por aqui mesmo — fico feliz de responder.\n\nE se preferir, me chama no WhatsApp que a gente conversa com mais calma 👇"
+    ],
+    choices: [],
+    isEnd: true,
+    cta: {
+      text: "Tirar dúvida com Anderson 💬",
+      phone: ANDERSON_PHONE
+    }
+  }
+
+};
+
+// ============================================================
+// ENGINE
+// ============================================================
+let currentStep = null;
+let isAnimating = false;
+
+const chat = document.getElementById('chat');
+const choicesArea = document.getElementById('choices-area');
+const typingRow = document.getElementById('typing-row');
+const typingEl = document.getElementById('typing');
+const headerStatus = document.getElementById('header-status');
+
+function scrollToBottom() {
+  setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 50);
+}
+
+function formatText(text) {
+  return text
+    .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+function addBubble(text, side, animate = true) {
+  const row = document.createElement('div');
+  row.className = `bubble-row from-${side === 'them' ? 'them' : 'me'}`;
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${side}`;
+  bubble.innerHTML = `
+    ${formatText(text)}
+    <div class="meta">
+      <span class="time">${getTime()}</span>
+      ${side === 'me' ? '<span class="tick">✓✓</span>' : ''}
+    </div>
+  `;
+
+  row.appendChild(bubble);
+  chat.insertBefore(row, typingRow);
+  scrollToBottom();
+
+  if (animate) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { row.classList.add('visible'); });
+    });
+  } else {
+    row.classList.add('visible');
+  }
+
+  return row;
+}
+
+function showTyping() {
+  typingRow.style.display = 'flex';
+  typingEl.classList.add('show');
+  headerStatus.textContent = 'digitando...';
+  scrollToBottom();
+}
+
+function hideTyping() {
+  typingEl.classList.remove('show');
+  typingRow.style.display = 'none';
+  headerStatus.textContent = 'Personal Trainer 💪';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function showMessages(messages, skipFirst = false) {
+  for (let i = 0; i < messages.length; i++) {
+    if (i === 0 && skipFirst) {
+      addBubble(messages[i], 'them');
+      continue;
+    }
+    const delay = Math.min(600 + messages[i].length * 18, 2200);
+    showTyping();
+    await sleep(delay);
+    hideTyping();
+    addBubble(messages[i], 'them');
+    await sleep(180);
+  }
+}
+
+function clearChoices() {
+  choicesArea.innerHTML = '<p class="choices-label">Selecione uma opção</p>';
+}
+
+function disableChoices() {
+  choicesArea.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  choicesArea.style.opacity = '0.5';
+  choicesArea.style.pointerEvents = 'none';
+}
+
+function showChoices(choices) {
+  clearChoices();
+  choicesArea.style.opacity = '1';
+  choicesArea.style.pointerEvents = 'auto';
+
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = choice.label;
+    btn.onclick = () => handleChoice(choice);
+    choicesArea.appendChild(btn);
+  });
+}
+
+function showCTA(cta) {
+  clearChoices();
+  const box = document.createElement('div');
+  box.className = 'cta-box';
+  box.innerHTML = `
+    <p>Clique abaixo para falar diretamente com o Anderson no WhatsApp 📲</p>
+    <button class="cta-btn" onclick="openWhatsApp('${cta.phone}')">
+      ${cta.text}
+    </button>
+  `;
+  choicesArea.appendChild(box);
+}
+
+function openWhatsApp(phone) {
+  window.open(`https://wa.me/${phone}`, '_blank');
+}
+
+async function handleChoice(choice) {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  disableChoices();
+
+  // Show user reply
+  addBubble(choice.label.replace(/^[^\w]+ /, '').trim().replace(/^[🔥💪⚡🧘🟢🟡🔴😕😴⏱❌✅⏳👉🤔]+\s*/, ''), 'me');
+
+  await sleep(400);
+
+  // Show ack from Anderson if exists
+  if (choice.ack) {
+    showTyping();
+    const ackDelay = Math.min(600 + choice.ack.length * 16, 1800);
+    await sleep(ackDelay);
+    hideTyping();
+    addBubble(choice.ack, 'them');
+    await sleep(300);
+  }
+
+  // Go to next step
+  await goToStep(choice.next);
+  isAnimating = false;
+}
+
+async function goToStep(stepId) {
+  const step = FLOW[stepId];
+  currentStep = stepId;
+
+  clearChoices();
+
+  // Intro message (non-typing, instant after ack)
+  if (step.intro) {
+    addBubble(step.intro, 'them');
+    await sleep(300);
+  }
+
+  // Show all messages
+  await showMessages(step.messages, !!step.intro);
+
+  // Show choices or CTA
+  if (step.choices && step.choices.length > 0) {
+    showChoices(step.choices);
+  } else if (step.cta) {
+    showCTA(step.cta);
+  }
+}
+
+function restartFlow() {
+  // Clear all bubbles except typing row and date chip
+  const allBubbles = chat.querySelectorAll('.bubble-row:not(#typing-row)');
+  allBubbles.forEach(b => b.remove());
+  clearChoices();
+  isAnimating = false;
+  currentStep = null;
+  startFlow();
+}
+
+async function startFlow() {
+  await sleep(600);
+  await goToStep('intro');
+}
+
+// Clock
+function updateClock() {
+  document.getElementById('clock').textContent = getTime();
+}
+setInterval(updateClock, 30000);
+updateClock();
+
+// Start
+startFlow();
+</script>
+</body>
+</html>
