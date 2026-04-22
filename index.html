@@ -255,21 +255,27 @@
     margin-top: 4px;
   }
   .cta-box p { color: #fff; font-size: 13px; margin-bottom: 10px; line-height: 1.5; }
-  .cta-btn {
-    display: inline-block;
-    background: #fff;
-    color: #075E54;
-    font-weight: 700;
-    font-size: 14px;
-    padding: 10px 20px;
-    border-radius: 20px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    transition: transform 0.1s;
-  }
-  .cta-btn:hover { transform: scale(1.03); }
+.cta-btn {
+  display: inline-block;
+  background: #fff;
+  color: #075E54;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 22px;
+  border-radius: 20px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+/* HOVER MELHORADO */
+.cta-btn:hover {
+  background: #000;
+  color: #fff;
+  transform: translateY(-1px);
+}
 
   .restart-btn {
     background: transparent;
@@ -334,7 +340,7 @@
 </div>
 
 <script>
-const ANDERSON_PHONE = "5500000000000"; // ALTERE AQUI
+const ANDERSON_PHONE = "5569999523234"; // ALTERE AQUI
 
 function getTime() {
   const now = new Date();
@@ -628,6 +634,11 @@ function showChoices(choices) {
 
 function showCTA(cta) {
   clearChoices();
+
+  // 🔥 FORÇA RESET VISUAL (resolve opacidade + clique)
+  choicesArea.style.opacity = '1';
+  choicesArea.style.pointerEvents = 'auto';
+
   const box = document.createElement('div');
   box.className = 'cta-box';
   box.innerHTML = `
